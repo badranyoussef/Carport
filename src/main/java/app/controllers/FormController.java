@@ -1,14 +1,14 @@
 package app.controllers;
 
-import app.dtos.DTOUserCarportOrder;
-import app.entities.Carport;
-import app.entities.Order;
-import app.entities.Shed;
-import app.entities.User;
+import app.model.dtos.DTOUserCarportOrder;
+import app.model.entities.Carport;
+import app.model.entities.Order;
+import app.model.entities.Shed;
+import app.model.entities.User;
 import app.exceptions.DatabaseException;
-import app.persistence.ConnectionPool;
-import app.persistence.MeasurementMapper;
-import app.persistence.OrderMapper;
+import app.repository.ConnectionPool;
+import app.repository.MeasurementRepository;
+import app.repository.OrderRepository;
 import app.services.CarportSvgTopView;
 import app.utility.Calculator;
 import io.javalin.http.Context;
@@ -64,9 +64,9 @@ public class FormController {
 
         try {
             if (loggedIn) {
-                OrderMapper.addOrderToExistingUser(dto, carportPrice, connectionPool);
+                OrderRepository.addOrderToExistingUser(dto, carportPrice, connectionPool);
             } else {
-                OrderMapper.addOrder(dto, carportPrice, connectionPool);
+                OrderRepository.addOrder(dto, carportPrice, connectionPool);
             }
         } catch (DatabaseException e) {
             handleOrderCreationError(ctx, connectionPool, e);
@@ -166,9 +166,9 @@ public class FormController {
      */
     public static void loadMeasurements(Context ctx, ConnectionPool connectionPool) {
         try {
-            List<Integer> lengthList = MeasurementMapper.getAllLengths(connectionPool);
-            List<Integer> widthList = MeasurementMapper.getAllWidths(connectionPool);
-            List<Integer> heightList = MeasurementMapper.getAllHeights(connectionPool);
+            List<Integer> lengthList = MeasurementRepository.getAllLengths(connectionPool);
+            List<Integer> widthList = MeasurementRepository.getAllWidths(connectionPool);
+            List<Integer> heightList = MeasurementRepository.getAllHeights(connectionPool);
 
             ctx.attribute("lengthList", lengthList);
             ctx.attribute("widthList", widthList);

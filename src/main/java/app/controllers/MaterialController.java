@@ -1,12 +1,12 @@
 package app.controllers;
 
-import app.dtos.DTOPartsByMaterials;
-import app.entities.Order;
+import app.model.dtos.DTOPartsByMaterials;
+import app.model.entities.Order;
 import app.exceptions.DatabaseException;
-import app.persistence.ConnectionPool;
-import app.persistence.MaterialMapper;
-import app.persistence.OrderMapper;
-import app.entities.Material;
+import app.repository.ConnectionPool;
+import app.repository.MaterialRepository;
+import app.repository.OrderRepository;
+import app.model.entities.Material;
 import app.services.CarportSvgTopView;
 import io.javalin.http.Context;
 import java.util.List;
@@ -14,7 +14,7 @@ import java.util.List;
 public class MaterialController {
     public static void loadMaterials(Context ctx, ConnectionPool connectionPool) {
         try {
-            List<Material> materialsList = MaterialMapper.getAllMaterials(connectionPool);
+            List<Material> materialsList = MaterialRepository.getAllMaterials(connectionPool);
 
             ctx.attribute("materialsList", materialsList);
 
@@ -31,8 +31,8 @@ public class MaterialController {
         int orderId = Integer.parseInt(ctx.formParam("order_id"));
 
         try {
-            Order order = OrderMapper.getOrderById(orderId, connectionPool);
-            List<DTOPartsByMaterials> partsList = MaterialMapper.getPartsList(order, connectionPool);
+            Order order = OrderRepository.getOrderById(orderId, connectionPool);
+            List<DTOPartsByMaterials> partsList = MaterialRepository.getPartsList(order, connectionPool);
 
             CarportSvgTopView svg = new CarportSvgTopView(300,200);
 
@@ -58,7 +58,7 @@ public class MaterialController {
             int price = Integer.parseInt(ctx.formParam("price"));
 
             Material newMaterial = new Material(name, length, description, itemNumber, width, height, price);
-            MaterialMapper.addMaterial(newMaterial, connectionPool);
+            MaterialRepository.addMaterial(newMaterial, connectionPool);
 
             loadMaterials(ctx, connectionPool);
         } catch (Exception e) {
@@ -69,7 +69,7 @@ public class MaterialController {
 
     public static void deleteMaterial (Context ctx, ConnectionPool connectionPool) throws DatabaseException {
         int materialId = Integer.parseInt(ctx.formParam("materialId"));
-        MaterialMapper.deleteMaterial(materialId, connectionPool);
+        MaterialRepository.deleteMaterial(materialId, connectionPool);
         loadMaterials(ctx, connectionPool);
     }
 
@@ -83,7 +83,7 @@ public class MaterialController {
                 Integer.parseInt(ctx.formParam("height_cm")),
                 Integer.parseInt(ctx.formParam("price"))
             );
-        MaterialMapper.updateMaterial(material, connectionPool);
+        MaterialRepository.updateMaterial(material, connectionPool);
         loadMaterials(ctx, connectionPool);
     }
 

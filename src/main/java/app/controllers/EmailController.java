@@ -1,6 +1,6 @@
 package app.controllers;
 
-import app.utility.EmailFactory;
+import app.services.EmailService;
 import io.javalin.http.Context;
 
 import java.io.IOException;
@@ -14,7 +14,7 @@ public class EmailController {
         String orderId = ctx.formParam("order_id");
 
         try {
-            EmailFactory.sendOrderQuestion(name, orderId, customerMail, message);
+            EmailService.sendOrderQuestion(name, orderId, customerMail, message);
             String confirmation = "Tak for din besked. Vi vender retur indenfor 24 timer.";
             ctx.attribute("confirmation", confirmation);
             ctx.render("kontakt-indsendt.html");
@@ -33,7 +33,7 @@ public class EmailController {
         String orderId = ctx.formParam("orderID");
 
         try {
-            EmailFactory.sendBill(customerName, orderId, price, employeeName);
+            EmailService.sendBill(customerName, orderId, price, employeeName);
         } catch (IOException e) {
             ctx.attribute("message", e.getMessage());
             ctx.render("ordre-side.html");
@@ -48,7 +48,7 @@ public class EmailController {
         String width = ctx.formParam("carport_width");
         String height = ctx.formParam("carport_height");
         try {
-            EmailFactory.sendOrderToSalesTeam(customerName, length, width, height, ID);
+            EmailService.sendOrderToSalesTeam(customerName, length, width, height, ID);
         } catch (IOException e) {
             ctx.attribute("message", e.getMessage());
             ctx.render("ordre-side.html");
@@ -57,10 +57,17 @@ public class EmailController {
 
     public static void sendMessageToSalesTeam(Context ctx, String customerName, String customerPhone, String customerEmail, String message) {
         try {
-            EmailFactory.sendMessageToSalesTeam(customerName, customerPhone, customerEmail, message);
-        } catch (IOException e) {
+            EmailService.sendMessageToSalesTeam(customerName, customerPhone, customerEmail, message);
+        } catch (Exception e) {
             ctx.attribute("message", e.getMessage());
             ctx.render("ordre-side.html");
         }
     }
+
+
+    private static void handleEmailException(Context ctx, IOException e, String errorView) {
+        ctx.attribute("message", "Der opstod en fejl under afsendelsen: " + e.getMessage());
+        ctx.render(errorView);
+    }
+
 }

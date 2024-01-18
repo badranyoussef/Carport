@@ -1,8 +1,8 @@
 package app.controllers;
 
-import app.entities.User;
-import app.persistence.ConnectionPool;
-import app.persistence.UserMapper;
+import app.model.entities.User;
+import app.repository.ConnectionPool;
+import app.repository.UserRepository;
 import io.javalin.http.Context;
 
 public class UserController {
@@ -26,9 +26,9 @@ public class UserController {
             String email = ctx.formParam("email");
             String password = ctx.formParam("password");
             //checking if email and password exists
-            boolean isLoggedIn = UserMapper.loginValidator(email, password, connectionPool);
+            boolean isLoggedIn = UserRepository.loginValidator(email, password, connectionPool);
             if (isLoggedIn) {
-                User user = UserMapper.getUserByEmail(email, connectionPool);
+                User user = UserRepository.getUserByEmail(email, connectionPool);
                 ctx.sessionAttribute("currentUser", user);
                 ctx.render("dashboard.html");
             } else {
@@ -71,7 +71,7 @@ public class UserController {
 
             User user = new User(name, email, password, address, phone, zip, consent, role);
 
-            User userAdded = UserMapper.addUser(user, connectionPool);
+            User userAdded = UserRepository.addUser(user, connectionPool);
             String message = userAdded.getName() + " er nu tilfjøet til systemet som Sælger";
             ctx.attribute("message", message);
             ctx.render("dashboard.html");

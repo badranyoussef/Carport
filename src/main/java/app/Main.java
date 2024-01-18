@@ -6,7 +6,7 @@ import app.controllers.OrderController;
 import app.controllers.SystemController;
 import app.controllers.UserController;
 import app.controllers.*;
-import app.persistence.ConnectionPool;
+import app.repository.ConnectionPool;
 import io.javalin.Javalin;
 import io.javalin.rendering.template.JavalinThymeleaf;
 
@@ -44,6 +44,10 @@ public class Main {
         app.get("/log-ud", ctx -> UserController.logout(ctx));
         app.get("/main-menu", ctx -> UserController.dashboardMenu(ctx));
 
+        //Opret medarbejder
+        app.get("/opret-medarbejder", ctx -> ctx.render("opret-medarbejder.html"));
+        app.post("/medarbejder-oprettet", ctx -> UserController.addAdminUser(ctx, connectionPool));
+
         app.post("/ordre-info", ctx -> MaterialController.loadParts(ctx, connectionPool));
 
         // Routing post
@@ -61,21 +65,11 @@ public class Main {
         app.post("/gem-skur-oplysninger", ctx -> OrderController.updateShed(ctx, connectionPool));
         app.post("/tilfoej-skur", ctx -> OrderController.addShed(ctx, connectionPool));
         app.post("/send-regning", ctx -> OrderController.sendBill(ctx, connectionPool));
-
-
         app.post("/gem-nye-pris", ctx -> OrderController.changePriceManually(ctx, connectionPool));
         app.post("/tilfoej-rabat", ctx -> OrderController.discountPercentageOrAmount(ctx, connectionPool));
-
         app.post("/send-besked", ctx -> ContactController.contact(ctx));
         app.post("/delete-material", ctx -> MaterialController.deleteMaterial(ctx, connectionPool));
         app.post("/update-material", ctx -> MaterialController.updateMaterial(ctx, connectionPool));
         app.post("/add-material", ctx -> MaterialController.addMaterial(ctx, connectionPool));
-
-
-
-        //Opret medarbejder
-        app.get("/opret-medarbejder", ctx -> ctx.render("opret-medarbejder.html"));
-        app.post("/medarbejder-oprettet", ctx -> UserController.addAdminUser(ctx, connectionPool));
-
     }
 }

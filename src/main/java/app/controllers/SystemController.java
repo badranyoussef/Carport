@@ -1,6 +1,6 @@
 package app.controllers;
 
-import app.entities.User;
+import app.model.entities.User;
 import io.javalin.http.Context;
 
 public class SystemController {

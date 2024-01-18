@@ -1,10 +1,10 @@
 package app.utility;
 
-import app.dtos.DTOParts;
-import app.entities.Carport;
-import app.entities.Part;
-import app.entities.Shed;
-import app.dtos.DTOUserCarportOrder;
+import app.model.dtos.DTOParts;
+import app.model.entities.Carport;
+import app.model.entities.Part;
+import app.model.entities.Shed;
+import app.model.dtos.DTOUserCarportOrder;
 import app.services.CarportSvgTopView;
 import java.util.*;
 

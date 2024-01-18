@@ -15,7 +15,7 @@
 
     <h1>Kontak os her</h1>
 
-    <p class="error_message" th:text="${#ctx.message}"></p>
+    <p class="error_message" th:text="${#ctx.errorMessage}"></p>
 
     <div id="contact">
         <div class="contact">
@@ -34,7 +34,7 @@
         </div>
         <div class="contact">
             <div>
-                <p th:text="${#ctx.confirmation}"></p>
+                <p th:text="${#ctx.message}"></p>
             </div>
             <div>
                 <form method="get">

@@ -1,9 +1,11 @@
 package app.controllers;
 
-import app.dtos.*;
-import app.entities.*;
+import app.model.entities.*;
 import app.exceptions.DatabaseException;
-import app.persistence.*;
+import app.model.dtos.DTOOrderCustomer;
+import app.model.dtos.DTOStatus;
+import app.repository.*;
+import app.services.OrderService;
 import app.utility.Calculator;
 import io.javalin.http.Context;
 
@@ -22,15 +24,15 @@ public class OrderController {
 
         try {
             //Brugeren
-            User chosenUser = OrderMapper.getOrderDetails(orderId, connectionPool);
+            User chosenUser = OrderRepository.getOrderDetails(orderId, connectionPool);
             ctx.sessionAttribute("user", chosenUser);
 
             //Carporten
-            Carport chosenUsersCarport = OrderMapper.getCarportByOrderId(orderId, connectionPool);
+            Carport chosenUsersCarport = OrderRepository.getCarportByOrderId(orderId, connectionPool);
             ctx.sessionAttribute("old_carport", chosenUsersCarport);
 
             //Shed
-            Shed chosenUsersShed = OrderMapper.getShedByOrderId(orderId, connectionPool);
+            Shed chosenUsersShed = OrderRepository.getShedByOrderId(orderId, connectionPool);
             ctx.sessionAttribute("old_shed", chosenUsersShed);
 
             //Load data
@@ -44,45 +46,22 @@ public class OrderController {
         }
     }
 
-    public static boolean deleteOrder(Context ctx, ConnectionPool connectionPool) {
-        try {
-            int result = Integer.parseInt(ctx.formParam("order_id"));
-            OrderMapper.deleteOrderById(result, connectionPool);
-            ctx.attribute("message", "Ordre er nu slettet");
-            ctx.render("ordre-side.html");
-        } catch (DatabaseException e) {
-            ctx.attribute("message", "Fejl sletning af ordre " + e.getMessage());
-            ctx.render("ordre-side.html");
-        }
-        return true; //Udelukkende til test formål
+    public static void deleteOrder(Context ctx, ConnectionPool connectionPool) {
+        int orderId = Integer.parseInt(ctx.formParam("order_id"));
+        OrderService.deleteOrder(orderId, ctx, connectionPool);
     }
 
     public static void getAllOrders(Context ctx, ConnectionPool connectionPool) {
-        try {
-            User user = ctx.sessionAttribute("currentUser");
-            if (user.getRole() == 1) {
-                List<Order> orders = OrderMapper.getAllOrdersByUser(user, connectionPool);
-                ctx.attribute("orderlist", orders);
-                ctx.render("ordre-side.html");
-            } else {
-                List<DTOStatus> statusList = StatusMapper.getAllStatuses(connectionPool);
-                List<DTOOrderCustomer> allOrders = OrderMapper.getAllOrders(connectionPool);
+        User user = ctx.sessionAttribute("currentUser");
+        OrderService.getAllOrders(user, ctx, connectionPool);
 
-                ctx.attribute("statusList", statusList);
-                ctx.attribute("allOrders", allOrders);
-                ctx.render("ordre-side.html");
-            }
-        } catch (DatabaseException e) {
-            ctx.attribute("message", "Fejl indlæsning af alle ordrer " + e.getMessage());
-            ctx.render("dashboard.html");
-        }
     }
 
     public static void updateOrderStatus(Context ctx, ConnectionPool connectionPool) {
         try {
             int orderId = Integer.parseInt(ctx.formParam("order_id"));
             int statusId = Integer.parseInt(ctx.formParam("status_id"));
-            OrderMapper.updateOrderStatus(orderId, statusId, connectionPool);
+            OrderRepository.updateOrderStatus(orderId, statusId, connectionPool);
             getAllOrders(ctx, connectionPool);
         } catch (DatabaseException e) {
             ctx.attribute("message", e.getMessage());
@@ -172,7 +151,7 @@ public class OrderController {
 
         //Opdater brugere oplysningerne
         try {
-            UserMapper.updateUser(newUser, connectionPool);
+            UserRepository.updateUser(newUser, connectionPool);
         } catch (DatabaseException e) {
             ctx.attribute("message", "error updating user" + e.getMessage());
             ctx.render("admin-kd-ordre.html");
@@ -184,7 +163,7 @@ public class OrderController {
 
         User oldUser = null;
         try {
-            oldUser = OrderMapper.getOrderDetails(orderId, connectionPool);
+            oldUser = OrderRepository.getOrderDetails(orderId, connectionPool);
         } catch (DatabaseException e) {
             ctx.attribute("message", "error loading order" + e.getMessage());
             ctx.render("admin-kd-ordre.html");
@@ -254,9 +233,9 @@ public class OrderController {
 
         //Opdater brugere oplysningerne
         try {
-            CarportMapper.updateCarport(newCarport, connectionPool);
-            oldUser = OrderMapper.getOrderDetails(orderID, connectionPool);
-            oldCarport = OrderMapper.getCarportByOrderId(orderID, connectionPool);
+            CarportRepository.updateCarport(newCarport, connectionPool);
+            oldUser = OrderRepository.getOrderDetails(orderID, connectionPool);
+            oldCarport = OrderRepository.getCarportByOrderId(orderID, connectionPool);
 
         } catch (DatabaseException e) {
             ctx.attribute("message", "error updating carport info" + e.getMessage());
@@ -312,7 +291,7 @@ public class OrderController {
         Shed newShed = new Shed(shed.getId(), updateWidth, updateLength);
 
         //Opdater brugere oplysningerne
-        ShedMapper.updateShed(newShed, connectionPool);
+        ShedRepository.updateShed(newShed, connectionPool);
 
 
         int orderId = Integer.parseInt(ctx.formParam("orderID"));
@@ -366,20 +345,20 @@ public class OrderController {
         Shed newShed = new Shed(updateWidth, updateLength);
 
         //Opdater brugere oplysningerne
-        Shed updatedShed = ShedMapper.addShed(newShed, connectionPool);
+        Shed updatedShed = ShedRepository.addShed(newShed, connectionPool);
 
         int orderId = Integer.parseInt(ctx.formParam("orderID"));
 
         ctx.attribute("orderID", orderId);
 
-        Carport carport = OrderMapper.getCarportByOrderId(orderId, connectionPool);
+        Carport carport = OrderRepository.getCarportByOrderId(orderId, connectionPool);
         carport.setShed(updatedShed);
         ctx.sessionAttribute("old_carport", carport);
 
         //Update Order with new created Shed
-        OrderMapper.addShedToOrder(carport, connectionPool);
+        OrderRepository.addShedToOrder(carport, connectionPool);
 
-        User user = OrderMapper.getOrderDetails(orderId, connectionPool);
+        User user = OrderRepository.getOrderDetails(orderId, connectionPool);
         ctx.sessionAttribute("user", user);
 
         ctx.sessionAttribute("old_shed", updatedShed);
@@ -403,15 +382,15 @@ public class OrderController {
             String message = "Regningen er nu sendt afsted.";
             ctx.attribute("message", message);
             int order_ID = Integer.parseInt(ctx.formParam("orderID"));
-            OrderMapper.updateStatusBillSent(order_ID, connectionPool);
+            OrderRepository.updateStatusBillSent(order_ID, connectionPool);
 
             int carportId = Integer.parseInt(ctx.formParam("carportId"));
 
-            Carport carport = CarportMapper.getCarportById(carportId, connectionPool);
+            Carport carport = CarportRepository.getCarportById(carportId, connectionPool);
 
             List <Part> listOfParts = new ArrayList<>(Calculator.calculateParts(carport, order_ID));
 
-            MaterialMapper.addPartsList(listOfParts, connectionPool);
+            MaterialRepository.addPartsList(listOfParts, connectionPool);
 
             EmailController.sendBill(ctx);
             OrderController.getAllOrders(ctx, connectionPool);
@@ -439,7 +418,7 @@ public class OrderController {
                 changePrice = firstPrice;
             }
 
-            OrderMapper.updateOrderPrice(order_ID, changePrice, connectionPool);
+            OrderRepository.updateOrderPrice(order_ID, changePrice, connectionPool);
 
             ctx.sessionAttribute("totalPrice", changePrice);
             ctx.attribute("orderID",order_ID);
@@ -469,7 +448,7 @@ public class OrderController {
             } else {
                 discountedPrice = firstPrice;
             }
-            OrderMapper.updateOrderPrice(order_ID,discountedPrice,connectionPool);
+            OrderRepository.updateOrderPrice(order_ID,discountedPrice,connectionPool);
 
             ctx.attribute("orderID", order_ID);
             ctx.sessionAttribute("totalPrice", discountedPrice);
