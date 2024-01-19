@@ -9,7 +9,14 @@ public class ContactController {
         String phone = ctx.formParam("phone");
         String email = ctx.formParam("email");
         String message = ctx.formParam("message");
-        ContactService.sendCustomerRequest(ctx, name, phone, email, message);
-    }
 
+        try {
+            ContactService.sendCustomerRequest(ctx, name, phone, email, message);
+            ctx.attribute("message", "Din besked er sendt.");
+            ctx.render("kontakt-indsendt.html");
+        }catch(Exception e){
+            ctx.attribute("message", "Der opstod en fejl: " + e.getMessage());
+            ctx.render("kontakt-indsendt.html");
+        }
+    }
 }

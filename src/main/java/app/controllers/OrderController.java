@@ -1,5 +1,6 @@
 package app.controllers;
 
+import app.model.dtos.OrderDTO;
 import app.model.entities.*;
 import app.exceptions.DatabaseException;
 import app.model.dtos.DTOOrderCustomer;
@@ -16,32 +17,26 @@ public class OrderController {
 
     public static void getChosenCustomerOrder(Context ctx, ConnectionPool connectionPool) {
 
-        float price = Float.parseFloat(ctx.formParam("price"));
-        ctx.sessionAttribute("totalPrice", price);
-
         int orderId = Integer.parseInt(ctx.formParam("order_id"));
         ctx.attribute("orderID", orderId);
 
+        float price = Float.parseFloat(ctx.formParam("price"));
+        ctx.sessionAttribute("totalPrice", price);
+
         try {
-            //Brugeren
-            User chosenUser = OrderRepository.getOrderDetails(orderId, connectionPool);
-            ctx.sessionAttribute("user", chosenUser);
+            OrderDTO orderDetails = OrderService.getCustomerOrderDetails(orderId, connectionPool);
 
-            //Carporten
-            Carport chosenUsersCarport = OrderRepository.getCarportByOrderId(orderId, connectionPool);
-            ctx.sessionAttribute("old_carport", chosenUsersCarport);
+            // Sæt attributter baseret på hentede data
+            ctx.sessionAttribute("user", orderDetails.getUser());
+            ctx.sessionAttribute("old_carport", orderDetails.getCarport());
+            ctx.sessionAttribute("old_shed", orderDetails.getShed());
 
-            //Shed
-            Shed chosenUsersShed = OrderRepository.getShedByOrderId(orderId, connectionPool);
-            ctx.sessionAttribute("old_shed", chosenUsersShed);
-
-            //Load data
+            // Du kan muligvis flytte loadMeasurements logik til OrderService også
             FormController.loadMeasurements(ctx, connectionPool);
 
             ctx.render("admin-kd-ordre.html");
         } catch (DatabaseException e) {
-            e.printStackTrace();
-            ctx.attribute("message", e.getMessage());
+            ctx.attribute("message", "Fejl ved hentning af ordre: " + e.getMessage());
             ctx.render("ordre-side.html");
         }
     }

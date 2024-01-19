@@ -3,7 +3,10 @@ package app.services;
 import app.exceptions.DatabaseException;
 import app.model.dtos.DTOOrderCustomer;
 import app.model.dtos.DTOStatus;
+import app.model.dtos.OrderDTO;
+import app.model.entities.Carport;
 import app.model.entities.Order;
+import app.model.entities.Shed;
 import app.model.entities.User;
 import app.repository.ConnectionPool;
 import app.repository.OrderRepository;
@@ -28,7 +31,6 @@ public class OrderService {
     }
 
     public static void getAllOrders(User user, Context ctx, ConnectionPool connectionPool) {
-
         try {
             if (user.getRole() == 1) {
                 List<Order> orders = getAllOrdersbyUserId(user, connectionPool);
@@ -54,7 +56,18 @@ public class OrderService {
     }
 
 
+    public static OrderDTO getCustomerOrderDetails(int orderId, ConnectionPool connectionPool) throws DatabaseException {
+        try {
+            // Hent data fra databasen ved hjælp af repositories
+            User user = OrderRepository.getOrderDetails(orderId, connectionPool);
+            Carport carport = OrderRepository.getCarportByOrderId(orderId, connectionPool);
+            Shed shed = OrderRepository.getShedByOrderId(orderId, connectionPool);
+
+            return new OrderDTO(user, carport, shed);
+        } catch (DatabaseException e) {
+            throw new DatabaseException("Fejl ved at indhente data om ordre");
+        }
 
 
-
+    }
 }

@@ -34,7 +34,7 @@ public class MaterialController {
             Order order = OrderRepository.getOrderById(orderId, connectionPool);
             List<DTOPartsByMaterials> partsList = MaterialRepository.getPartsList(order, connectionPool);
 
-            CarportSvgTopView svg = new CarportSvgTopView(300,200);
+            CarportSvgTopView svg = new CarportSvgTopView(300,300);
 
             ctx.attribute("svg", svg);
             ctx.attribute("partsList", partsList);
