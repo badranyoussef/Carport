@@ -12,8 +12,6 @@ import app.repository.ConnectionPool;
 import app.repository.OrderRepository;
 import app.repository.StatusRepository;
 import io.javalin.http.Context;
-
-import java.util.ArrayList;
 import java.util.List;
 
 public class OrderService {

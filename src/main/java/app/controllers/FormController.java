@@ -7,13 +7,12 @@ import app.model.entities.Shed;
 import app.model.entities.User;
 import app.exceptions.DatabaseException;
 import app.repository.ConnectionPool;
-import app.repository.MeasurementRepository;
 import app.repository.OrderRepository;
 import app.services.CarportSvgTopView;
+import app.services.FormService;
+import app.services.MeasurementService;
 import app.utility.Calculator;
 import io.javalin.http.Context;
-
-import java.util.List;
 import java.util.Locale;
 
 
@@ -24,11 +23,9 @@ public class FormController {
 
         User user = getUser(ctx);
         boolean loggedIn = user != null;
-
         try {
-            DTOUserCarportOrder dto = createOrder(ctx, user, loggedIn, connectionPool);
+            DTOUserCarportOrder dto = FormService.createOrder(ctx, user, loggedIn, connectionPool);
             sendOrderConfirmation(ctx, user, dto.getCarport());
-
         } catch (Exception e) {
             handleOrderCreationError(ctx, connectionPool, e);
         }
@@ -91,88 +88,9 @@ public class FormController {
         ctx.render("bestilling.html");
     }
 
-
-    /*
-        public static void createCustomerRequest(Context ctx, ConnectionPool connectionPool) {
-
-            User user;
-            boolean loggedIn = false;
-
-            try {
-                //Carport data
-                int carportWidth = Integer.parseInt(ctx.formParam("carport_width"));
-                int carportLength = Integer.parseInt(ctx.formParam("carport_length"));
-                int carportHeight = Integer.parseInt(ctx.formParam("carport_height"));
-                String note = ctx.formParam("note");
-
-                //Shed data
-                String shedChoice = ctx.formParam("redskabsrum");
-
-                if (ctx.sessionAttribute("currentUser") == null) {
-                    user = UserController.createUser(ctx);
-                } else {
-                    user = ctx.sessionAttribute("currentUser");
-                    loggedIn = true;
-                }
-
-                //Create Carport instance from carport input data
-                Carport carport = new Carport(carportWidth, carportLength, carportHeight);
-
-                //Create Order instance from note
-                Order order = new Order(note);
-
-                if (shedChoice.equalsIgnoreCase("ja")) {
-                    int shedWidth = Integer.parseInt(ctx.formParam("shed_width"));
-                    int shedLength = Integer.parseInt(ctx.formParam("shed_length"));
-                    Shed shed = new Shed(shedWidth, shedLength);
-                    carport.setShed(shed);
-                }
-
-                if (loggedIn) {
-                    DTOUserCarportOrder dto = new DTOUserCarportOrder(user, carport, order);
-                    float carportPrice = Calculator.carportPriceCalculator2(dto);
-                    OrderMapper.addOrderToExistingUser(dto, carportPrice, connectionPool);
-                } else {
-                    DTOUserCarportOrder dto = new DTOUserCarportOrder(user, carport, order);
-                    float carportPrice = Calculator.carportPriceCalculator2(dto);
-                    OrderMapper.addOrder(dto, carportPrice, connectionPool);
-                }
-
-
-                ctx.attribute("name", user.getName());
-                ctx.attribute("length", carportLength);
-                ctx.attribute("width", carportWidth);
-                ctx.attribute("height", carportHeight);
-
-                int id = user.getId();
-                String name = user.getName();
-
-                Locale.setDefault(new Locale("US"));
-                CarportSvgTopView svg = new CarportSvgTopView(carportLength, carportWidth);
-                ctx.attribute("svg", svg.toString());
-
-                EmailController.sendOrderToSalesTeam(ctx, name, id);
-
-                ctx.render("tilbud-indsendt.html");
-            } catch (Exception e) {
-                loadMeasurements(ctx, connectionPool);
-                ctx.attribute("message", e.getMessage());
-                ctx.render("bestilling.html");
-            }
-
-
-        }
-
-     */
     public static void loadMeasurements(Context ctx, ConnectionPool connectionPool) {
         try {
-            List<Integer> lengthList = MeasurementRepository.getAllLengths(connectionPool);
-            List<Integer> widthList = MeasurementRepository.getAllWidths(connectionPool);
-            List<Integer> heightList = MeasurementRepository.getAllHeights(connectionPool);
-
-            ctx.attribute("lengthList", lengthList);
-            ctx.attribute("widthList", widthList);
-            ctx.attribute("heightList", heightList);
+            MeasurementService.getAllMeasurements(ctx, connectionPool);
 
         } catch (DatabaseException e) {
             ctx.attribute("message", e.getMessage());

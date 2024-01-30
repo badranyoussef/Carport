@@ -3,8 +3,6 @@ package app.controllers;
 import app.model.dtos.OrderDTO;
 import app.model.entities.*;
 import app.exceptions.DatabaseException;
-import app.model.dtos.DTOOrderCustomer;
-import app.model.dtos.DTOStatus;
 import app.repository.*;
 import app.services.OrderService;
 import app.utility.Calculator;
